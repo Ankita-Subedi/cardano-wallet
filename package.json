@@ -15,11 +15,14 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^24.0.3",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "@meshsdk/core": "^1.9.0-beta.56",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
     "dotenv": "^16.5.0"
   }
 }
