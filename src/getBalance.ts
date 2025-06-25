@@ -1,11 +1,9 @@
 import { wallet } from "./wallet";
+import { logBalance } from "./utils";
 
 async function showBalance() {
   const balance = await wallet.getBalance();
-  console.log("Your wallet balance:");
-  balance.forEach((asset) => {
-    console.log(`- Asset: ${asset.unit}, Quantity: ${asset.quantity}`);
-  });
+  logBalance(balance);
 }
 
 showBalance();

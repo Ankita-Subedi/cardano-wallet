@@ -1,14 +1,14 @@
 import { wallet } from "./wallet";
+import { logAddresses } from "./utils";
 
-async function showAllAddresses() {
-  const used = await wallet.getUsedAddresses();
-  const unused = await wallet.getUnusedAddresses();
+export async function showAllAddresses() {
+  try {
+    const used = await wallet.getUsedAddresses();
+    const unused = await wallet.getUnusedAddresses();
+    const change = await wallet.getChangeAddress();
 
-  console.log("Used addresses:");
-  used.forEach((addr) => console.log(addr));
-
-  console.log("\nUnused addresses:");
-  unused.forEach((addr) => console.log(addr));
+    logAddresses(used, unused, change);
+  } catch (error) {
+    console.error("Failed to fetch addresses:", error);
+  }
 }
-
-showAllAddresses();
