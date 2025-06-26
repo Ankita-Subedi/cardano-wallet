@@ -4,6 +4,11 @@ import { showAllAddresses } from "./showAllAddresses";
 import { logBalance, logUtxos } from "./utils";
 import { sendValue } from "./sendAda";
 
+// Helper function to check if string is a valid hex string
+function isHexString(str: string) {
+  return /^[0-9a-fA-F]+$/.test(str);
+}
+
 async function main() {
   await initWallet();
 
@@ -38,70 +43,130 @@ async function main() {
             break;
           }
           case "4": {
-  rl.question("Enter recipient address: ", (recipient) => {
-    if (!recipient.trim()) {
-      console.log("Recipient cannot be empty.");
-      showMenu();
-      return;
-    }
-
-    rl.question("Enter amount of ADA (in lovelace): ", (amount) => {
-      const trimmedAmount = amount.trim();
-      if (!trimmedAmount || isNaN(Number(trimmedAmount)) || Number(trimmedAmount) <= 0) {
-        console.log("Please enter a valid positive amount.");
-        showMenu();
-        return;
-      }
-
-      // Initialize assets array with ADA
-      const assets = [{ unit: "lovelace", quantity: trimmedAmount }];
-
-      // Function to ask about tokens
-      function askForToken() {
-        rl.question("Do you want to add a token to send? (yes/no): ", (answer) => {
-          const ans = answer.trim().toLowerCase();
-
-          if (ans === "yes" || ans === "y") {
-            rl.question("Enter token unit (policyId + assetName): ", (unit) => {
-              if (!unit.trim()) {
-                console.log("Token unit cannot be empty.");
-                askForToken();
+            rl.question("Enter recipient address: ", (recipient) => {
+              if (!recipient.trim()) {
+                console.log("Recipient cannot be empty.");
+                showMenu();
                 return;
               }
-              rl.question("Enter token quantity: ", (qty) => {
-                if (!qty.trim() || isNaN(Number(qty)) || Number(qty) <= 0) {
-                  console.log("Please enter a valid positive quantity.");
-                  askForToken();
-                  return;
+
+              const assets: { unit: string; quantity: string }[] = [];
+
+              function askTokens() {
+                rl.question(
+                  "Do you want to add a token to send? (yes/no): ",
+                  (answer) => {
+                    const ans = answer.trim().toLowerCase();
+
+                    if (ans === "yes" || ans === "y") {
+                      rl.question(
+                        "Enter token unit (policyId + assetName): ",
+                        (unit) => {
+                          const trimmedUnit = unit.trim();
+
+                          if (!trimmedUnit) {
+                            console.log("Token unit cannot be empty.");
+                            askTokens();
+                            return;
+                          }
+
+                          if (!isHexString(trimmedUnit)) {
+                            console.log(
+                              "❗ Token unit must be a valid hex string (0-9, a-f)."
+                            );
+                            askTokens();
+                            return;
+                          }
+
+                          rl.question("Enter token quantity: ", (qty) => {
+                            if (
+                              !qty.trim() ||
+                              isNaN(Number(qty)) ||
+                              Number(qty) <= 0
+                            ) {
+                              console.log(
+                                "Please enter a valid positive quantity."
+                              );
+                              askTokens();
+                              return;
+                            }
+
+                            assets.push({
+                              unit: trimmedUnit,
+                              quantity: qty.trim(),
+                            });
+                            console.log("Token added.");
+                            askTokens(); // ask again for next token
+                          });
+                        }
+                      );
+                    } else if (ans === "no" || ans === "n") {
+                      if (
+                        assets.length === 0 ||
+                        assets.every((a) => Number(a.quantity) <= 0)
+                      ) {
+                        console.log(
+                          "You must enter at least some ADA or tokens to send."
+                        );
+                        showMenu();
+                        return;
+                      }
+
+                      sendValue(recipient.trim(), assets)
+                        .then(() => showMenu())
+                        .catch((err) => {
+                          console.error("❌ Failed to send");
+                          console.error(
+                            "🔍 Error message:",
+                            err.message || err
+                          );
+                          showMenu();
+                        });
+                    } else {
+                      console.log("Please answer 'yes' or 'no'.");
+                      askTokens();
+                    }
+                  }
+                );
+              }
+
+              rl.question(
+                "Do you want to send ADA? (yes/no): ",
+                (adaAnswer) => {
+                  const adaAns = adaAnswer.trim().toLowerCase();
+
+                  if (adaAns === "yes" || adaAns === "y") {
+                    rl.question("Enter ADA amount in lovelace: ", (amount) => {
+                      const trimmedAmount = amount.trim();
+                      if (
+                        !trimmedAmount ||
+                        isNaN(Number(trimmedAmount)) ||
+                        Number(trimmedAmount) <= 0
+                      ) {
+                        console.log(
+                          "Please enter a valid positive ADA amount."
+                        );
+                        showMenu();
+                        return;
+                      }
+
+                      assets.push({
+                        unit: "lovelace",
+                        quantity: trimmedAmount,
+                      });
+                      askTokens(); // then ask for tokens
+                    });
+                  } else if (adaAns === "no" || adaAns === "n") {
+                    askTokens(); // no ADA, go straight to tokens
+                  } else {
+                    console.log("Please answer 'yes' or 'no'.");
+                    showMenu();
+                  }
                 }
-
-                assets.push({ unit: unit.trim(), quantity: qty.trim() });
-                console.log("Token added.");
-                askForToken(); // Ask again for next token
-              });
+              );
             });
-          } else if (ans === "no" || ans === "n") {
-            // Done adding tokens, call sendValue
-            sendValue(recipient.trim(), assets)
-              .then(() => showMenu())
-              .catch((err) => {
-                console.error("Failed to send:", err);
-                showMenu();
-              });
-          } else {
-            console.log("Please answer 'yes' or 'no'.");
-            askForToken(); // Repeat if invalid answer
+            return;
           }
-        });
-      }
-
-      // Start asking about tokens
-      askForToken();
-    });
-  });
-  return; // Prevent fallthrough to showMenu immediately
-}
-
           case "5":
             console.log("👋 Goodbye!");
             rl.close();

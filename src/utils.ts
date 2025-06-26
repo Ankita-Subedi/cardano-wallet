@@ -20,7 +20,7 @@ interface UTxO {
 export function getTxBuilder(): MeshTxBuilder {
   return new MeshTxBuilder({
     fetcher: provider,
-    verbose: true,
+    verbose: false,
   });
 }
 
