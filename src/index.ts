@@ -23,7 +23,8 @@ async function main() {
     console.log("2. Show UTXOs");
     console.log("3. Show All Addresses");
     console.log("4. Send ADA / Tokens");
-    console.log("5. Exit\n");
+    console.log("5. Mint a Token\n");
+    console.log("6. Exit\n");
 
     rl.question("Enter your choice: ", async (answer) => {
       try {
@@ -154,10 +155,10 @@ async function main() {
                         unit: "lovelace",
                         quantity: trimmedAmount,
                       });
-                      askTokens(); // then ask for tokens
+                      askTokens();
                     });
                   } else if (adaAns === "no" || adaAns === "n") {
-                    askTokens(); // no ADA, go straight to tokens
+                    askTokens();
                   } else {
                     console.log("Please answer 'yes' or 'no'.");
                     showMenu();
@@ -167,7 +168,17 @@ async function main() {
             });
             return;
           }
-          case "5":
+          case "5": {
+            try {
+              const { mintDemoToken } = await import("./mint");
+              await mintDemoToken();
+            } catch (err) {
+              console.error("❌ Minting failed:", err);
+            }
+            break;
+          }
+
+          case "6":
             console.log("👋 Goodbye!");
             rl.close();
             return;
