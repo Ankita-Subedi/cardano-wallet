@@ -1,5 +1,6 @@
-import { MeshTxBuilder } from "@meshsdk/core";
+import { MeshTxBuilder, NativeScript } from "@meshsdk/core";
 import { provider } from "./provider";
+import { wallet } from "./wallet";
 
 interface Asset {
   unit: string;
@@ -56,4 +57,34 @@ export function logAddresses(
   unused.forEach((addr) => console.log(addr));
 
   console.log("\n Change Address:", change);
+}
+
+export async function getWalletAddress(): Promise<string> {
+  const used = await wallet.getUsedAddresses();
+  const unused = await wallet.getUnusedAddresses();
+  const change = await wallet.getChangeAddress();
+
+  const address = used[0] || unused[0] || change;
+
+  if (!address) {
+    throw new Error("No wallet address found from wallet instance");
+  }
+
+  return address;
+}
+
+export function buildTimeSigScript(keyHash: string): NativeScript {
+  return {
+    type: "all",
+    scripts: [
+      {
+        type: "before",
+        slot: "99999999",
+      },
+      {
+        type: "sig",
+        keyHash,
+      },
+    ],
+  };
 }
