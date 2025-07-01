@@ -1,0 +1,51 @@
+import {
+  MeshTxBuilder,
+  stringToHex,
+} from "@meshsdk/core";
+import { wallet } from "./wallet";
+import { provider } from "./provider";
+import { getForgingScript } from "./utils";
+
+// 📝 Your asset metadata
+const demoAssetMetadata = {
+  name: "AnkitaToken",
+  image: "ipfs://your-image-link-here",
+  description: "Minted using Native Script rules",
+};
+
+async function main() {
+  const utxos = await wallet.getUtxos();
+  const { forgingScript, policyId, address } = await getForgingScript();
+
+  const tokenName = "AnkitaToken";
+  const tokenNameHex = stringToHex(tokenName);
+  const metadata = {
+    [policyId]: {
+      [tokenName]: demoAssetMetadata,
+    },
+  };
+
+  const txBuilder = new MeshTxBuilder({
+    fetcher: provider,
+    verbose: true,
+  });
+
+  const unsignedTx = await txBuilder
+    .mint("1", policyId, tokenNameHex)
+    .mintingScript(forgingScript)
+    .metadataValue(721, metadata)
+    .changeAddress(address)
+    .invalidHereafter(99999999)
+    .selectUtxosFrom(utxos)
+    .complete();
+
+  const signedTx = await wallet.signTx(unsignedTx);
+  const txHash = await wallet.submitTx(signedTx);
+
+  console.log(" Minted with native script!");
+  console.log(" Transaction Hash:", txHash);
+}
+
+main().catch((err) => {
+  console.error(" Failed to mint with native script:", err);
+});

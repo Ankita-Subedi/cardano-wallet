@@ -1,4 +1,6 @@
-import { MeshTxBuilder, NativeScript } from "@meshsdk/core";
+import { MeshTxBuilder, NativeScript,deserializeAddress,
+  ForgeScript,
+  resolveScriptHash, } from "@meshsdk/core";
 import { provider } from "./provider";
 import { wallet } from "./wallet";
 
@@ -87,4 +89,20 @@ export function buildTimeSigScript(keyHash: string): NativeScript {
       },
     ],
   };
+}
+
+
+export async function getForgingScript(): Promise<{
+  forgingScript: ReturnType<typeof ForgeScript.fromNativeScript>;
+  policyId: string;
+  address: string;
+  keyHash: string;
+}> {
+  const address = await getWalletAddress();
+  const { pubKeyHash: keyHash } = deserializeAddress(address);
+  const nativeScript = buildTimeSigScript(keyHash);
+  const forgingScript = ForgeScript.fromNativeScript(nativeScript);
+  const policyId = resolveScriptHash(forgingScript);
+
+  return { forgingScript, policyId, address, keyHash };
 }
