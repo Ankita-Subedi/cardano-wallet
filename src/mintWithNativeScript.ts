@@ -8,9 +8,9 @@ import { getForgingScript } from "./utils";
 
 // 📝 Your asset metadata
 const demoAssetMetadata = {
-  name: "AnkitaToken",
-  image: "ipfs://your-image-link-here",
-  description: "Minted using Native Script rules",
+  name: "LalalaToken",
+  image: "ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua",
+  description: "Minted using Native Script rules okkk",
 };
 
 async function main() {
