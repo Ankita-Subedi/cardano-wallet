@@ -1,8 +1,13 @@
-import { MeshTxBuilder, NativeScript,deserializeAddress,
+import {
+  MeshTxBuilder,
+  NativeScript,
+  deserializeAddress,
   ForgeScript,
-  resolveScriptHash, } from "@meshsdk/core";
+  resolveScriptHash,
+} from "@meshsdk/core";
 import { provider } from "./provider";
 import { wallet } from "./wallet";
+import { getNativeScriptFromFile } from "./getNativeScriptFromFile";
 
 interface Asset {
   unit: string;
@@ -91,7 +96,6 @@ export function buildTimeSigScript(keyHash: string): NativeScript {
   };
 }
 
-
 export async function getForgingScript(): Promise<{
   forgingScript: ReturnType<typeof ForgeScript.fromNativeScript>;
   policyId: string;
@@ -100,8 +104,22 @@ export async function getForgingScript(): Promise<{
 }> {
   const address = await getWalletAddress();
   const { pubKeyHash: keyHash } = deserializeAddress(address);
-  const nativeScript = buildTimeSigScript(keyHash);
-  const forgingScript = ForgeScript.fromNativeScript(nativeScript);
+
+  // Get JSON native script from file
+  const nativeScript = await getNativeScriptFromFile(keyHash);
+
+  // Replace the keyHash placeholder if present
+  const replacedScript = JSON.parse(
+    JSON.stringify(nativeScript),
+    (key, value) => {
+      if (typeof value === "string" && value === "YOUR_KEY_HASH_HERE") {
+        return keyHash;
+      }
+      return value;
+    }
+  );
+
+  const forgingScript = ForgeScript.fromNativeScript(replacedScript);
   const policyId = resolveScriptHash(forgingScript);
 
   return { forgingScript, policyId, address, keyHash };

@@ -6,18 +6,17 @@ import { wallet } from "./wallet";
 import { provider } from "./provider";
 import { getForgingScript } from "./utils";
 
-// 📝 Your asset metadata
 const demoAssetMetadata = {
-  name: "LalalaToken",
+  name: "LililiToken",
   image: "ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua",
-  description: "Minted using Native Script rules okkk",
+  description: "Minted using Native Script rules lilly token",
 };
 
 async function main() {
   const utxos = await wallet.getUtxos();
   const { forgingScript, policyId, address } = await getForgingScript();
 
-  const tokenName = "AnkitaToken";
+  const tokenName = "LillyToken";
   const tokenNameHex = stringToHex(tokenName);
   const metadata = {
     [policyId]: {

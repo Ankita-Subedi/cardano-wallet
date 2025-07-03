@@ -7,9 +7,16 @@ export async function sendValue(
 ) {
   await initWallet();
 
+  const lovelaceAsset = assets.find((a) => a.unit === "lovelace");
+
+  if (lovelaceAsset && Number(lovelaceAsset.quantity) < 1000000) {
+    console.log("❌ You must send at least 1 ADA (1,000,000 lovelace).");
+    return;
+  }
+
   const utxos = await wallet.getUtxos();
   const changeAddress = await wallet.getChangeAddress();
-  const txBuilder = getTxBuilder(); // centralized builder
+  const txBuilder = getTxBuilder();
 
   const unsignedTx = await txBuilder
     .txOut(recipient, assets)
