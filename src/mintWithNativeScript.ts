@@ -1,8 +1,5 @@
-import {
-  MeshTxBuilder,
-  stringToHex,
-} from "@meshsdk/core";
-import { wallet } from "./wallet";
+import { MeshTxBuilder, stringToHex } from "@meshsdk/core";
+import { getWallet } from "./wallet";
 import { provider } from "./provider";
 import { getForgingScript } from "./utils";
 
@@ -13,6 +10,7 @@ const demoAssetMetadata = {
 };
 
 async function main() {
+  const wallet = getWallet();
   const utxos = await wallet.getUtxos();
   const { forgingScript, policyId, address } = await getForgingScript();
 

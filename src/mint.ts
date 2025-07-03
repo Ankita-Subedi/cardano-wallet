@@ -1,8 +1,9 @@
 import { Transaction, ForgeScript, Mint, AssetMetadata } from "@meshsdk/core";
-import { wallet } from "./wallet";
+import { getWallet } from "./wallet";
 import { provider } from "./provider";
 
 export async function mintDemoToken() {
+  const wallet = getWallet();
   const address = await wallet.getUsedAddresses().then((a) => a[0]);
   const forgingScript = ForgeScript.withOneSignature(address);
 

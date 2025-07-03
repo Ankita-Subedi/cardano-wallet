@@ -1,11 +1,11 @@
-import { wallet, initWallet } from "./wallet";
+import { getWallet } from "./wallet";
 import { getTxBuilder } from "./utils";
 
 export async function sendValue(
   recipient: string,
   assets: { unit: string; quantity: string }[]
 ) {
-  await initWallet();
+  const wallet = getWallet();
 
   const lovelaceAsset = assets.find((a) => a.unit === "lovelace");
 

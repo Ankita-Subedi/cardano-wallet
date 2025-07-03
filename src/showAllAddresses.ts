@@ -1,8 +1,9 @@
-import { wallet } from "./wallet";
+import { getWallet } from "./wallet";
 import { logAddresses } from "./utils";
 
 export async function showAllAddresses() {
   try {
+    const wallet = getWallet();
     const used = await wallet.getUsedAddresses();
     const unused = await wallet.getUnusedAddresses();
     const change = await wallet.getChangeAddress();

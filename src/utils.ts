@@ -6,7 +6,7 @@ import {
   resolveScriptHash,
 } from "@meshsdk/core";
 import { provider } from "./provider";
-import { wallet } from "./wallet";
+import { getWallet } from "./wallet";
 import { getNativeScriptFromFile } from "./getNativeScriptFromFile";
 
 interface Asset {
@@ -67,6 +67,7 @@ export function logAddresses(
 }
 
 export async function getWalletAddress(): Promise<string> {
+  const wallet = getWallet();
   const used = await wallet.getUsedAddresses();
   const unused = await wallet.getUnusedAddresses();
   const change = await wallet.getChangeAddress();
@@ -105,10 +106,10 @@ export async function getForgingScript(): Promise<{
   const address = await getWalletAddress();
   const { pubKeyHash: keyHash } = deserializeAddress(address);
 
-  // Get JSON native script from file
+
   const nativeScript = await getNativeScriptFromFile(keyHash);
 
-  // Replace the keyHash placeholder if present
+
   const replacedScript = JSON.parse(
     JSON.stringify(nativeScript),
     (key, value) => {
