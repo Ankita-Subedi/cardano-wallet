@@ -2,7 +2,7 @@
   "type": "all",
   "scripts": [
     {
-      "type": "before",
+      "type": "after",
       "slot": "99999999"
     },
     {

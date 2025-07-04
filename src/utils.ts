@@ -8,6 +8,12 @@ import {
 import { provider } from "./provider";
 import { getWallet } from "./wallet";
 import { getNativeScriptFromFile } from "./getNativeScriptFromFile";
+import fetch from "node-fetch";
+import { config } from "./config";
+import fs from "fs/promises";
+import path from "path";
+
+const BLOCKFROST_URL = "https://cardano-preprod.blockfrost.io/api/v0";
 
 interface Asset {
   unit: string;
@@ -97,6 +103,13 @@ export function buildTimeSigScript(keyHash: string): NativeScript {
   };
 }
 
+export async function readSavedSlot(): Promise<number> {
+  const slotPath = path.resolve(process.cwd(), "slot.json");
+  const raw = await fs.readFile(slotPath, "utf-8");
+  const { slot } = JSON.parse(raw);
+  return parseInt(slot);
+}
+
 export async function getForgingScript(): Promise<{
   forgingScript: ReturnType<typeof ForgeScript.fromNativeScript>;
   policyId: string;
@@ -105,23 +118,42 @@ export async function getForgingScript(): Promise<{
 }> {
   const address = await getWalletAddress();
   const { pubKeyHash: keyHash } = deserializeAddress(address);
+  const slot = await getSlotAfter10Minutes();
+  const nativeScript = await getNativeScriptFromFile(keyHash, slot);
 
-
-  const nativeScript = await getNativeScriptFromFile(keyHash);
-
-
-  const replacedScript = JSON.parse(
-    JSON.stringify(nativeScript),
-    (key, value) => {
-      if (typeof value === "string" && value === "YOUR_KEY_HASH_HERE") {
-        return keyHash;
-      }
-      return value;
-    }
-  );
-
-  const forgingScript = ForgeScript.fromNativeScript(replacedScript);
+  const forgingScript = ForgeScript.fromNativeScript(nativeScript);
   const policyId = resolveScriptHash(forgingScript);
 
   return { forgingScript, policyId, address, keyHash };
+}
+
+export async function getCurrentSlot(): Promise<number> {
+  const res = await fetch(`${BLOCKFROST_URL}/blocks/latest`, {
+    headers: {
+      project_id: config.BLOCKFROST_API_KEY,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(` Failed to fetch current slot: ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as { slot: number };
+  return data.slot;
+}
+
+export async function getSlotAfter10Minutes(): Promise<number> {
+  const currentSlot = await getCurrentSlot();
+  const slotAfter10Min = currentSlot + 2000; // 2000 slots ≈ 10 min on preprod
+  return slotAfter10Min;
+}
+
+export async function saveSlotAfter10Min(): Promise<void> {
+  const currentSlot = await getCurrentSlot();
+  const futureSlot = currentSlot + 2000; // ≈ 10 min later on preprod
+
+  const slotPath = path.resolve(process.cwd(), "slot.json");
+  await fs.writeFile(slotPath, JSON.stringify({ slot: futureSlot }, null, 2), "utf-8");
+
+  console.log("Saved future slot:", futureSlot);
 }

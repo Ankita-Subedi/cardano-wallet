@@ -1,17 +1,22 @@
 import { MeshTxBuilder, stringToHex } from "@meshsdk/core";
-import { getWallet } from "./wallet";
+import { initWallet, getWallet } from "./wallet";
 import { provider } from "./provider";
 import { getForgingScript } from "./utils";
+import { config } from "./config";
 
 const demoAssetMetadata = {
   name: "LililiToken",
   image: "ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua",
-  description: "Minted using Native Script rules lilly token",
+  description: "Minted using Native Script rules - Lily Token",
 };
 
 async function main() {
+  await initWallet(config.MNEMONIC);
+
   const wallet = getWallet();
+
   const utxos = await wallet.getUtxos();
+
   const { forgingScript, policyId, address } = await getForgingScript();
 
   const tokenName = "LillyToken";
@@ -39,10 +44,10 @@ async function main() {
   const signedTx = await wallet.signTx(unsignedTx);
   const txHash = await wallet.submitTx(signedTx);
 
-  console.log(" Minted with native script!");
-  console.log(" Transaction Hash:", txHash);
+  console.log("✅ Minted with native script!");
+  console.log("🔗 Transaction Hash:", txHash);
 }
 
 main().catch((err) => {
-  console.error(" Failed to mint with native script:", err);
+  console.error("❌ Failed to mint with native script:", err);
 });
